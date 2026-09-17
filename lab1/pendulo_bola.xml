@@ -1,0 +1,68 @@
+<mujoco model="pendulo_bola">
+    <compiler angle="degree"/>
+
+    <!-- Passo de 0,5 ms para resolver o impacto com maior detalhe. -->
+    <option gravity="0 0 -9.81" timestep="0.0005"/>
+
+    <worldbody>
+        <light pos="0 -2 4"/>
+
+        <!-- Chão fixo, com colisões ativas. -->
+        <geom name="chao"
+              type="plane"
+              size="4 4 0.1"
+              friction="0.5 0.005 0.0001"
+              rgba="0.8 0.8 0.8 1"/>
+
+        <!-- Marcador visual da articulação, sem colisões. -->
+        <geom name="suporte"
+              type="sphere"
+              pos="0 0 1.05"
+              size="0.06"
+              contype="0"
+              conaffinity="0"
+              rgba="0.3 0.3 0.3 1"/>
+
+        <!-- Pêndulo inicialmente inclinado.
+             O extremo inferior começa do lado negativo de x
+             e aproxima-se da bola ao cair. -->
+        <body name="pendulo"
+              pos="0 0 1.05"
+              euler="0 45 0">
+
+            <!-- Rotação livre em torno de y, sem amortecimento. -->
+            <joint name="articulacao"
+                   type="hinge"
+                   axis="0 1 0"
+                   damping="0"/>
+
+            <!-- Cápsula de 1 kg.
+                 Na vertical, o centro da ponta inferior fica
+                 a 5 cm do chão e a superfície fica a 2 cm. -->
+            <geom name="barra"
+                  type="capsule"
+                  fromto="0 0 0 0 0 -1"
+                  size="0.03"
+                  mass="1"
+                  friction="0.5 0.005 0.0001"
+                  rgba="0.2 0.5 0.9 1"/>
+        </body>
+
+        <!-- Bola ligeiramente à frente do pêndulo.
+             Centro a 5 cm de altura: começa apoiada no chão. -->
+        <body name="bola" pos="0.15 0 0.05">
+
+            <!-- Permite translação em x, y, z e rotação
+                 em torno dos três eixos: 6 graus de liberdade. -->
+            <freejoint/>
+
+            <geom name="bola_geom"
+                  type="sphere"
+                  size="0.05"
+                  mass="0.1"
+                  condim="6"
+                  friction="0.5 0.005 0.005"
+                  rgba="1 0.3 0.1 1"/>
+        </body>
+    </worldbody>
+</mujoco>

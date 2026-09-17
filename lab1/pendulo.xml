@@ -26,14 +26,14 @@
               rgba="0.3 0.3 0.3 1"/>
 
         <!-- Barra inicialmente inclinada 45 graus -->
-        <body name="pendulo" pos="0 0 2" euler="0 45 0">
+        <body name="pendulo" pos="0 0 2" euler="0 5 0">
 
             <!-- Articulação: permite rodar em torno do eixo y, 
             binário que se opõe à velocidade de rotação tau=-b dθ -->
             <joint name="articulacao"
                    type="hinge"
                    axis="0 1 0"
-                   damping="0.05"/>
+                   damping="0"/>
 
             <!-- Barra com 1 metro de comprimento entre extremos,
                  raio de 3 cm e massa de 1 kg 
