@@ -1,0 +1,49 @@
+<mujoco model="pendulo">
+    <!-- Ângulos do XML em graus -->
+    <compiler angle="degree"/>
+
+    <!-- Gravidade g = (gx,gy,gz) e step de simulação de 1 ms -->
+    <option gravity="0 0 -9.81" timestep="0.001"/>
+
+    <worldbody>
+        <!-- Luz para iluminar os objetos-->
+        <light pos="0 -2 4"/>
+
+        <!-- Chão -->
+        <geom name="chao"
+              type="plane"
+              size="3 3 0.1"
+              rgba="0.8 0.8 0.8 1"/>
+
+        <!-- Suporte fixo, a 2 metros do chão, com raio de 6cm, grupo de colisão 0, 
+        colide com grupo 0 -->
+        <geom name="suporte"
+              type="sphere"
+              pos="0 0 2"
+              size="0.06" 
+              contype="0"
+              conaffinity="0"
+              rgba="0.3 0.3 0.3 1"/>
+
+        <!-- Barra inicialmente inclinada 45 graus -->
+        <body name="pendulo" pos="0 0 2" euler="0 45 0">
+
+            <!-- Articulação: permite rodar em torno do eixo y, 
+            binário que se opõe à velocidade de rotação tau=-b dθ -->
+            <joint name="articulacao"
+                   type="hinge"
+                   axis="0 1 0"
+                   damping="0.05"/>
+
+            <!-- Barra com 1 metro de comprimento entre extremos,
+                 raio de 3 cm e massa de 1 kg 
+                 Primeiro ponto (0, 0, 0); Segundo ponto (0, 0, -1)-->
+            <geom name="barra"
+                  type="capsule"
+                  fromto="0 0 0 0 0 -1"
+                  size="0.03"
+                  mass="1"
+                  rgba="0.2 0.5 0.9 1"/>
+        </body>
+    </worldbody>
+</mujoco>
