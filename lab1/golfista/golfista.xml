@@ -1,380 +1,168 @@
-<mujoco model="golfista">
-
-    <!-- Comprimentos em metros, massas em kg.
-         Ângulos geométricos e limites dos joints em graus.
-         Os comandos dos atuadores de posição usam radianos. -->
-    <compiler angle="degree"/>
-
-    <!-- Gravidade vertical, passo de 1 ms e integrador adequado
-         aos atuadores com amortecimento. -->
-    <option gravity="0 0 -9.81"
-            timestep="0.001"
-            integrator="implicitfast"/>
-
+<?xml version='1.0' encoding='utf-8'?>
+<mujoco model="golfista_v2">
+    <!-- SI: metros, kg, segundos. Angulos XML em graus; qpos e controlos em radianos. -->
+    <compiler angle="degree" autolimits="true" />
+    <option timestep=".001" gravity="0 0 -9.81" integrator="implicitfast" iterations="100" tolerance="1e-10" cone="elliptic" />
+    <statistic center="0.15 0 0.9" extent="2.4" />
+    <visual>
+        <global offwidth="1280" offheight="960" />
+    </visual>
+    <default>
+        <joint damping="1" armature=".015" />
+        <geom contype="0" conaffinity="0" rgba=".83 .64 .49 1" />
+    </default>
     <worldbody>
-
-        <!-- Iluminação da cena. -->
-        <light pos="0 -3 4"/>
-
-        <!-- Convenção:
-             x = frente do jogador
-             y = lado esquerdo do jogador
-             z = cima -->
-
-        <!-- Chão horizontal na altura z = 0. -->
-        <geom name="chao"
-              type="plane"
-              size="4 4 0.1"
-              rgba="0.75 0.80 0.75 1"/>
-
-        <!-- PÉLVIS
-             Origem a 95 cm do chão.
-             Sem joint: fica fixa ao mundo.
-             Os corpos dentro dela usam coordenadas relativas à pélvis. -->
-        <body name="pelvis" pos="0 0 0.95">
-
-            <!-- Nas caixas, size contém as semidimensões.
-                 Dimensões totais: 24 x 32 x 18 cm.
-                 As massas são estimativas iniciais. -->
-            <geom name="pelvis_geom"
-                  type="box"
-                  size="0.12 0.16 0.09"
-                  mass="10"
-                  rgba="0.20 0.25 0.35 1"/>
-
-            <!-- PERNA ESQUERDA
-                 Sem articulações nesta primeira versão:
-                 fica rigidamente ligada à pélvis. -->
-            <body name="perna_esquerda" pos="0 0.13 -0.05">
-
-                <!-- Coxa com 40 cm entre os pontos do eixo central. -->
-                <geom name="coxa_esquerda"
-                      type="capsule"
-                      fromto="0 0 0 0 0 -0.40"
-                      size="0.065"
-                      mass="7"
-                      rgba="0.25 0.30 0.45 1"/>
-
-                <!-- Canela com 40 cm entre joelho e tornozelo. -->
-                <geom name="canela_esquerda"
-                      type="capsule"
-                      fromto="0 0 -0.40 0 0 -0.80"
-                      size="0.045"
-                      mass="3.5"
-                      rgba="0.35 0.40 0.55 1"/>
-
-                <!-- Pé com 26 x 12 x 10 cm.
-                     Centro a 5 cm do chão e sola na altura zero. -->
-                <geom name="pe_esquerdo"
-                      type="box"
-                      pos="0.07 0 -0.85"
-                      size="0.13 0.06 0.05"
-                      mass="1"
-                      rgba="0.15 0.15 0.15 1"/>
-            </body>
-
-            <!-- PERNA DIREITA
-                 Simétrica à esquerda em relação ao plano y = 0. -->
-            <body name="perna_direita" pos="0 -0.13 -0.05">
-
-                <geom name="coxa_direita"
-                      type="capsule"
-                      fromto="0 0 0 0 0 -0.40"
-                      size="0.065"
-                      mass="7"
-                      rgba="0.25 0.30 0.45 1"/>
-
-                <geom name="canela_direita"
-                      type="capsule"
-                      fromto="0 0 -0.40 0 0 -0.80"
-                      size="0.045"
-                      mass="3.5"
-                      rgba="0.35 0.40 0.55 1"/>
-
-                <geom name="pe_direito"
-                      type="box"
-                      pos="0.07 0 -0.85"
-                      size="0.13 0.06 0.05"
-                      mass="1"
-                      rgba="0.15 0.15 0.15 1"/>
-            </body>
-
-            <!-- TRONCO
-                 Origem no topo da pélvis.
-                 A cabeça e os braços acompanham o seu movimento. -->
-            <body name="tronco" pos="0 0 0.09">
-
-                <!-- Cintura: rotação em torno do eixo vertical.
-                     Limites angulares em graus.
-                     damping introduz resistência proporcional
-                     à velocidade angular. -->
-                <joint name="cintura_rotacao"
-                       type="hinge"
-                       pos="0 0 0"
-                       axis="0 0 1"
-                       limited="true"
-                       range="-60 60"
-                       damping="2"/>
-
-                <!-- Tronco com dimensões totais de 24 x 40 x 44 cm. -->
-                <geom name="tronco_geom"
-                      type="box"
-                      pos="0 0 0.22"
-                      size="0.12 0.20 0.22"
-                      mass="25"
-                      rgba="0.15 0.55 0.80 1"/>
-
-                <!-- Pescoço rigidamente ligado ao tronco. -->
-                <geom name="pescoco"
-                      type="capsule"
-                      fromto="0 0 0.44 0 0 0.52"
-                      size="0.045"
-                      mass="0.5"
-                      rgba="0.85 0.65 0.50 1"/>
-
-                <!-- Cabeça também rigidamente ligada ao tronco. -->
-                <geom name="cabeca"
-                      type="sphere"
-                      pos="0 0 0.61"
-                      size="0.10"
-                      mass="4.5"
-                      rgba="0.85 0.65 0.50 1"/>
-
-                <!-- Ombros visuais, com posições relativas ao TRONCO. -->
-                <geom name="ombro_esquerdo_visual"
-                      type="sphere"
-                      pos="0 0.235 0.40"
-                      size="0.065"
-                      mass="0"
-                      contype="0"
-                      conaffinity="0"
-                      rgba="0.15 0.55 0.80 1"/>
-
-                <geom name="ombro_direito_visual"
-                      type="sphere"
-                      pos="0 -0.235 0.40"
-                      size="0.065"
-                      mass="0"
-                      contype="0"
-                      conaffinity="0"
-                      rgba="0.15 0.55 0.80 1"/>
-
-                <!-- BRAÇO ESQUERDO
-                     Origem no ombro, relativa ao tronco. -->
-                <body name="braco_esquerdo" pos="0 0.27 0.40">
-
-                    <!-- Movimento para a frente/trás.
-                         Na postura inicial, ângulos positivos
-                         levantam o braço para a frente (+x). -->
-                    <joint name="ombro_esquerdo_frente"
-                           type="hinge"
-                           axis="0 -1 0"
-                           limited="true"
-                           range="-60 160"
-                           damping="1"/>
-
-                    <!-- Movimento lateral.
-                         Na postura inicial, ângulos positivos
-                         afastam o braço para a esquerda (+y). -->
-                    <joint name="ombro_esquerdo_lado"
-                           type="hinge"
-                           axis="1 0 0"
-                           limited="true"
-                           range="-20 160"
-                           damping="1"/>
-
-                    <!-- Braço com 30 cm entre ombro e cotovelo. -->
-                    <geom name="braco_esquerdo_geom"
-                          type="capsule"
-                          fromto="0 0 0 0 0 -0.30"
-                          size="0.045"
-                          mass="3"
-                          rgba="0.85 0.65 0.50 1"/>
-
-                    <!-- ANTEBRAÇO ESQUERDO
-                         Origem no cotovelo, relativa ao braço. -->
-                    <body name="antebraco_esquerdo" pos="0 0 -0.30">
-
-                        <!-- Zero: cotovelo esticado.
-                             Ângulos positivos: flexão para a frente
-                             quando o braço está na postura inicial. -->
-                        <joint name="cotovelo_esquerdo"
-                               type="hinge"
-                               axis="0 -1 0"
-                               limited="true"
-                               range="0 140"
-                               damping="0.5"/>
-
-                        <!-- Antebraço com 26 cm entre cotovelo e pulso. -->
-                        <geom name="antebraco_esquerdo_geom"
-                              type="capsule"
-                              fromto="0 0 0 0 0 -0.26"
-                              size="0.035"
-                              mass="1.5"
-                              rgba="0.85 0.65 0.50 1"/>
-
-                        <!-- Mão simplificada, ainda sem joint no pulso. -->
-                        <geom name="mao_esquerda"
-                              type="sphere"
-                              pos="0 0 -0.30"
-                              size="0.04"
-                              mass="0.4"
-                              rgba="0.85 0.65 0.50 1"/>
+        <light pos="1 -3 4" dir="-0.2 0.5 -1" />
+        <light pos="-2 2 3" diffuse=".5 .5 .5" />
+        <!-- x: frente do jogador; y: esquerda; z: cima. Geometrias humanas sem auto-colisao nesta fase. -->
+        <geom name="chao" type="plane" size="4 4 .1" rgba=".45 .58 .43 1" contype="1" conaffinity="6" friction=".9 .01 .001" condim="6" solref=".01 1" />
+        <body name="pelvis" pos="-.05 0 .90">
+            <!-- Bacia livre: nao existe apoio invisivel nem fixacao ao mundo. -->
+            <freejoint name="base_livre" />
+            <geom name="pelvis_geom" type="ellipsoid" size=".12 .17 .10" mass="10" rgba=".2 .24 .33 1" />
+            <!-- Perna esq: anca 3 eixos, joelho 1, tornozelo 2. Massas aproximadas. -->
+            <body name="coxa_esq" pos="0 0.13 -.05">
+                <joint name="anca_esq_yaw" type="hinge" axis="0 0 1" range="-50 50" />
+                <joint name="anca_esq_roll" type="hinge" axis="1 0 0" range="-45 45" />
+                <joint name="anca_esq_pitch" type="hinge" axis="0 1 0" range="-110 50" />
+                <geom type="capsule" fromto="0 0 0 0 0 -.40" size=".06" mass="7" rgba=".23 .28 .40 1" />
+                <body name="canela_esq" pos="0 0 -.40">
+                    <joint name="joelho_esq" type="hinge" axis="0 1 0" range="0 145" />
+                    <geom type="capsule" fromto="0 0 0 0 0 -.40" size=".043" mass="3.5" rgba=".29 .35 .47 1" />
+                    <body name="pe_esq" pos="0 0 -.40">
+                        <joint name="tornozelo_esq_pitch" type="hinge" axis="0 1 0" range="-50 40" />
+                        <joint name="tornozelo_esq_roll" type="hinge" axis="1 0 0" range="-30 30" />
+                        <geom name="sola_esq" type="box" pos=".045 0 -.045" size=".14 .06 .045" mass="1" rgba=".12 .12 .14 1" contype="2" conaffinity="1" condim="6" friction=".9 .01 .001" solref=".01 1" />
+                        <site name="apoio_esq" pos=".045 0 -.09" size=".007" rgba="1 .8 0 1" />
                     </body>
                 </body>
-
-                <!-- BRAÇO DIREITO
-                     Origem no lado negativo de y do tronco. -->
-                <body name="braco_direito" pos="0 -0.27 0.40">
-
-                    <!-- Movimento para a frente/trás. -->
-                    <joint name="ombro_direito_frente"
-                           type="hinge"
-                           axis="0 -1 0"
-                           limited="true"
-                           range="-60 160"
-                           damping="1"/>
-
-                    <!-- Eixo oposto ao do ombro esquerdo.
-                         Ângulos positivos afastam o braço
-                         para a direita na postura inicial. -->
-                    <joint name="ombro_direito_lado"
-                           type="hinge"
-                           axis="-1 0 0"
-                           limited="true"
-                           range="-20 160"
-                           damping="1"/>
-
-                    <geom name="braco_direito_geom"
-                          type="capsule"
-                          fromto="0 0 0 0 0 -0.30"
-                          size="0.045"
-                          mass="3"
-                          rgba="0.85 0.65 0.50 1"/>
-
-                    <!-- ANTEBRAÇO DIREITO -->
-                    <body name="antebraco_direito" pos="0 0 -0.30">
-
-                        <joint name="cotovelo_direito"
-                               type="hinge"
-                               axis="0 -1 0"
-                               limited="true"
-                               range="0 140"
-                               damping="0.5"/>
-
-                        <geom name="antebraco_direito_geom"
-                              type="capsule"
-                              fromto="0 0 0 0 0 -0.26"
-                              size="0.035"
-                              mass="1.5"
-                              rgba="0.85 0.65 0.50 1"/>
-
-                        <!-- Mão rigidamente ligada ao antebraço. -->
-                        <geom name="mao_direita"
-                              type="sphere"
-                              pos="0 0 -0.30"
-                              size="0.04"
-                              mass="0.4"
-                              rgba="0.85 0.65 0.50 1"/>
+            </body>
+            <!-- Perna dir: anca 3 eixos, joelho 1, tornozelo 2. Massas aproximadas. -->
+            <body name="coxa_dir" pos="0 -0.13 -.05">
+                <joint name="anca_dir_yaw" type="hinge" axis="0 0 1" range="-50 50" />
+                <joint name="anca_dir_roll" type="hinge" axis="1 0 0" range="-45 45" />
+                <joint name="anca_dir_pitch" type="hinge" axis="0 1 0" range="-110 50" />
+                <geom type="capsule" fromto="0 0 0 0 0 -.40" size=".06" mass="7" rgba=".23 .28 .40 1" />
+                <body name="canela_dir" pos="0 0 -.40">
+                    <joint name="joelho_dir" type="hinge" axis="0 1 0" range="0 145" />
+                    <geom type="capsule" fromto="0 0 0 0 0 -.40" size=".043" mass="3.5" rgba=".29 .35 .47 1" />
+                    <body name="pe_dir" pos="0 0 -.40">
+                        <joint name="tornozelo_dir_pitch" type="hinge" axis="0 1 0" range="-50 40" />
+                        <joint name="tornozelo_dir_roll" type="hinge" axis="1 0 0" range="-30 30" />
+                        <geom name="sola_dir" type="box" pos=".045 0 -.045" size=".14 .06 .045" mass="1" rgba=".12 .12 .14 1" contype="2" conaffinity="1" condim="6" friction=".9 .01 .001" solref=".01 1" />
+                        <site name="apoio_dir" pos=".045 0 -.09" size=".007" rgba="1 .8 0 1" />
+                    </body>
+                </body>
+            </body>
+            <body name="tronco" pos="0 0 .08">
+                <!-- Tronco relativo a bacia: rotacao axial, inclinacao lateral e flexao. -->
+                <joint name="tronco_yaw" type="hinge" axis="0 0 1" range="-70 70" />
+                <joint name="tronco_roll" type="hinge" axis="1 0 0" range="-35 35" />
+                <joint name="tronco_pitch" type="hinge" axis="0 1 0" range="-25 55" />
+                <geom type="ellipsoid" pos="0 0 .20" size=".12 .205 .25" mass="25" rgba=".08 .42 .65 1" />
+                <geom type="capsule" fromto="0 0 .43 0 0 .50" size=".043" mass=".5" />
+                <geom name="cabeca" type="sphere" pos="0 0 .59" size=".095" mass="4.5" />
+                <geom name="ombro_visual_esq" type="sphere" pos="0 0.21 .40" size=".063" mass="0" rgba=".08 .42 .65 1" />
+                <body name="braco_esq" pos="0 0.23 .40">
+                    <!-- Ombro com 3 eixos: nao confundir rotacao axial com a pronacao do antebraco. -->
+                    <joint name="ombro_esq_pitch" type="hinge" axis="0 -1 0" range="-70 170" />
+                    <joint name="ombro_esq_roll" type="hinge" axis="1 0 0" range="-80 150" />
+                    <joint name="ombro_esq_axial" type="hinge" axis="0 0 1" range="-100 100" />
+                    <geom type="capsule" fromto="0 0 0 0 0 -.30" size=".043" mass="3" />
+                    <body name="cotovelo_body_esq" pos="0 0 -.30">
+                        <joint name="cotovelo_esq" type="hinge" axis="0 -1 0" range="0 145" />
+                        <geom type="sphere" size=".035" mass=".1" />
+                        <body name="antebraco_esq">
+                            <joint name="pronacao_esq" type="hinge" axis="0 0 1" range="-100 100" />
+                            <geom type="capsule" fromto="0 0 0 0 0 -.27" size=".032" mass="1.4" />
+                            <body name="mao_esq" pos="0 0 -.27">
+                                <joint name="pulso_esq_flex" type="hinge" axis="0 1 0" range="-80 80" />
+                                <joint name="pulso_esq_desvio" type="hinge" axis="1 0 0" range="-40 40" />
+                                <geom name="luva_esq" type="box" pos="0 0 -.04" size=".025 .036 .04" mass=".4" rgba=".92 .92 .87 1" />
+                                <site name="pega_mao_esq" pos="0 0 -.04" size=".006" rgba="1 .2 .1 1" />
+                                <!-- Taco rigidamente ligado a mao esquerda; a mao direita fecha a cadeia por weld. -->
+                                <body name="taco" pos="0 0 -.04">
+                                    <geom name="punho_taco" type="capsule" fromto="0 0 .035 0 0 -.17" size=".014" mass=".05" rgba=".1 .1 .1 1" />
+                                    <geom name="haste_taco" type="capsule" fromto="0 0 -.17 0 0 -1.00" size=".005" mass=".10" rgba=".65 .68 .72 1" contype="4" conaffinity="9" />
+                                    <geom name="cabeca_taco" type="box" pos=".025 0 -1.00" size=".055 .027 .022" mass=".20" rgba=".25 .27 .3 1" contype="4" conaffinity="9" solref=".005 1" />
+                                    <site name="pega_taco_dir" pos="0 0 -.09" size=".006" rgba=".2 1 .1 1" />
+                                    <site name="centro_cabeca_taco" pos=".025 0 -1.00" size=".004" />
+                                </body>
+                            </body>
+                        </body>
+                    </body>
+                </body>
+                <geom name="ombro_visual_dir" type="sphere" pos="0 -0.21 .40" size=".063" mass="0" rgba=".08 .42 .65 1" />
+                <body name="braco_dir" pos="0 -0.23 .40">
+                    <!-- Ombro com 3 eixos: nao confundir rotacao axial com a pronacao do antebraco. -->
+                    <joint name="ombro_dir_pitch" type="hinge" axis="0 -1 0" range="-70 170" />
+                    <joint name="ombro_dir_roll" type="hinge" axis="-1 0 0" range="-80 150" />
+                    <joint name="ombro_dir_axial" type="hinge" axis="0 0 1" range="-100 100" />
+                    <geom type="capsule" fromto="0 0 0 0 0 -.30" size=".043" mass="3" />
+                    <body name="cotovelo_body_dir" pos="0 0 -.30">
+                        <joint name="cotovelo_dir" type="hinge" axis="0 -1 0" range="0 145" />
+                        <geom type="sphere" size=".035" mass=".1" />
+                        <body name="antebraco_dir">
+                            <joint name="pronacao_dir" type="hinge" axis="0 0 1" range="-100 100" />
+                            <geom type="capsule" fromto="0 0 0 0 0 -.27" size=".032" mass="1.4" />
+                            <body name="mao_dir" pos="0 0 -.27">
+                                <joint name="pulso_dir_flex" type="hinge" axis="0 1 0" range="-80 80" />
+                                <joint name="pulso_dir_desvio" type="hinge" axis="1 0 0" range="-40 40" />
+                                <geom name="luva_dir" type="box" pos="0 0 -.04" size=".025 .036 .04" mass=".4" rgba=".92 .92 .87 1" />
+                                <site name="pega_mao_dir" pos="0 0 -.04" size=".006" rgba="1 .2 .1 1" />
+                            </body>
+                        </body>
                     </body>
                 </body>
             </body>
         </body>
+        <!-- Bola livre, sem contacto inicial com o taco. Sem aerodinamica nesta fase. -->
+        <body name="bola" pos=".7155 -.095 .02135">
+            <freejoint name="bola_livre" />
+            <geom name="bola_geom" type="sphere" size=".02135" mass=".0459" rgba=".98 .98 .98 1" contype="8" conaffinity="5" condim="6" friction=".35 .001 .0002" solref=".005 1" />
+        </body>
     </worldbody>
-
-    <!-- ATUADORES DE POSIÇÃO
-         Cada atuador tenta atingir um ângulo desejado.
-
-         Com gear=1:
-         binário = kp * (ângulo desejado - ângulo atual)
-                   - kv * velocidade angular
-         sujeito aos limites definidos em forcerange.
-
-         kp: ganho de posição, em N.m/rad.
-         kv: ganho de amortecimento, em N.m.s/rad.
-         ctrlrange: intervalo do comando, em RADIANOS.
-         forcerange: intervalo de binário, em N.m.
-
-         Ganhos e limites são valores iniciais para os testes,
-         ainda não validados como parâmetros biomecânicos. -->
+    <equality>
+        <!-- Pega idealizada sem deslizamento. Impoe posicao e orientacao relativas; nao simula dedos. -->
+        <weld name="pega_direita" site1="pega_mao_dir" site2="pega_taco_dir" solref=".015 1" solimp=".95 .99 .001" torquescale=".08" />
+    </equality>
     <actuator>
-
-        <!-- Cintura: aproximadamente -60 a +60 graus. -->
-        <position name="motor_cintura"
-                  joint="cintura_rotacao"
-                  gear="1"
-                  kp="500"
-                  kv="50"
-                  ctrllimited="true"
-                  ctrlrange="-1.0472 1.0472"
-                  forcelimited="true"
-                  forcerange="-100 100"/>
-
-        <!-- Ombro esquerdo: movimento para a frente/trás. -->
-        <position name="motor_ombro_esq_frente"
-                  joint="ombro_esquerdo_frente"
-                  gear="1"
-                  kp="300"
-                  kv="30"
-                  ctrllimited="true"
-                  ctrlrange="-1.0472 2.7925"
-                  forcelimited="true"
-                  forcerange="-60 60"/>
-
-        <!-- Ombro esquerdo: movimento lateral. -->
-        <position name="motor_ombro_esq_lado"
-                  joint="ombro_esquerdo_lado"
-                  gear="1"
-                  kp="300"
-                  kv="30"
-                  ctrllimited="true"
-                  ctrlrange="-0.3491 2.7925"
-                  forcelimited="true"
-                  forcerange="-60 60"/>
-
-        <!-- Cotovelo esquerdo: aproximadamente 0 a 140 graus. -->
-        <position name="motor_cotovelo_esq"
-                  joint="cotovelo_esquerdo"
-                  gear="1"
-                  kp="150"
-                  kv="10"
-                  ctrllimited="true"
-                  ctrlrange="0 2.4435"
-                  forcelimited="true"
-                  forcerange="-30 30"/>
-
-        <!-- Ombro direito: movimento para a frente/trás. -->
-        <position name="motor_ombro_dir_frente"
-                  joint="ombro_direito_frente"
-                  gear="1"
-                  kp="300"
-                  kv="30"
-                  ctrllimited="true"
-                  ctrlrange="-1.0472 2.7925"
-                  forcelimited="true"
-                  forcerange="-60 60"/>
-
-        <!-- Ombro direito: movimento lateral. -->
-        <position name="motor_ombro_dir_lado"
-                  joint="ombro_direito_lado"
-                  gear="1"
-                  kp="300"
-                  kv="30"
-                  ctrllimited="true"
-                  ctrlrange="-0.3491 2.7925"
-                  forcelimited="true"
-                  forcerange="-60 60"/>
-
-        <!-- Cotovelo direito. -->
-        <position name="motor_cotovelo_dir"
-                  joint="cotovelo_direito"
-                  gear="1"
-                  kp="150"
-                  kv="10"
-                  ctrllimited="true"
-                  ctrlrange="0 2.4435"
-                  forcelimited="true"
-                  forcerange="-30 30"/>
+        <!-- Motores de binario, gear=1. Controlador PD e compensacao estatica no Python. -->
+        <motor name="motor_anca_esq_yaw" joint="anca_esq_yaw" gear="1" ctrllimited="true" ctrlrange="-150 150" />
+        <motor name="motor_anca_esq_roll" joint="anca_esq_roll" gear="1" ctrllimited="true" ctrlrange="-150 150" />
+        <motor name="motor_anca_esq_pitch" joint="anca_esq_pitch" gear="1" ctrllimited="true" ctrlrange="-180 180" />
+        <motor name="motor_joelho_esq" joint="joelho_esq" gear="1" ctrllimited="true" ctrlrange="-150 150" />
+        <motor name="motor_tornozelo_esq_pitch" joint="tornozelo_esq_pitch" gear="1" ctrllimited="true" ctrlrange="-120 120" />
+        <motor name="motor_tornozelo_esq_roll" joint="tornozelo_esq_roll" gear="1" ctrllimited="true" ctrlrange="-90 90" />
+        <motor name="motor_anca_dir_yaw" joint="anca_dir_yaw" gear="1" ctrllimited="true" ctrlrange="-150 150" />
+        <motor name="motor_anca_dir_roll" joint="anca_dir_roll" gear="1" ctrllimited="true" ctrlrange="-150 150" />
+        <motor name="motor_anca_dir_pitch" joint="anca_dir_pitch" gear="1" ctrllimited="true" ctrlrange="-180 180" />
+        <motor name="motor_joelho_dir" joint="joelho_dir" gear="1" ctrllimited="true" ctrlrange="-150 150" />
+        <motor name="motor_tornozelo_dir_pitch" joint="tornozelo_dir_pitch" gear="1" ctrllimited="true" ctrlrange="-120 120" />
+        <motor name="motor_tornozelo_dir_roll" joint="tornozelo_dir_roll" gear="1" ctrllimited="true" ctrlrange="-90 90" />
+        <motor name="motor_tronco_yaw" joint="tronco_yaw" gear="1" ctrllimited="true" ctrlrange="-120 120" />
+        <motor name="motor_tronco_roll" joint="tronco_roll" gear="1" ctrllimited="true" ctrlrange="-120 120" />
+        <motor name="motor_tronco_pitch" joint="tronco_pitch" gear="1" ctrllimited="true" ctrlrange="-160 160" />
+        <motor name="motor_ombro_esq_pitch" joint="ombro_esq_pitch" gear="1" ctrllimited="true" ctrlrange="-80 80" />
+        <motor name="motor_ombro_esq_roll" joint="ombro_esq_roll" gear="1" ctrllimited="true" ctrlrange="-80 80" />
+        <motor name="motor_ombro_esq_axial" joint="ombro_esq_axial" gear="1" ctrllimited="true" ctrlrange="-50 50" />
+        <motor name="motor_cotovelo_esq" joint="cotovelo_esq" gear="1" ctrllimited="true" ctrlrange="-50 50" />
+        <motor name="motor_pronacao_esq" joint="pronacao_esq" gear="1" ctrllimited="true" ctrlrange="-20 20" />
+        <motor name="motor_pulso_esq_flex" joint="pulso_esq_flex" gear="1" ctrllimited="true" ctrlrange="-20 20" />
+        <motor name="motor_pulso_esq_desvio" joint="pulso_esq_desvio" gear="1" ctrllimited="true" ctrlrange="-20 20" />
+        <motor name="motor_ombro_dir_pitch" joint="ombro_dir_pitch" gear="1" ctrllimited="true" ctrlrange="-80 80" />
+        <motor name="motor_ombro_dir_roll" joint="ombro_dir_roll" gear="1" ctrllimited="true" ctrlrange="-80 80" />
+        <motor name="motor_ombro_dir_axial" joint="ombro_dir_axial" gear="1" ctrllimited="true" ctrlrange="-50 50" />
+        <motor name="motor_cotovelo_dir" joint="cotovelo_dir" gear="1" ctrllimited="true" ctrlrange="-50 50" />
+        <motor name="motor_pronacao_dir" joint="pronacao_dir" gear="1" ctrllimited="true" ctrlrange="-20 20" />
+        <motor name="motor_pulso_dir_flex" joint="pulso_dir_flex" gear="1" ctrllimited="true" ctrlrange="-20 20" />
+        <motor name="motor_pulso_dir_desvio" joint="pulso_dir_desvio" gear="1" ctrllimited="true" ctrlrange="-20 20" />
     </actuator>
-
+    <custom>
+        <numeric name="kp" data="1500 1500 1500 1500 1200 1200 1500 1500 1500 1500 1200 1200 700 700 900 450 450 250 250 100 100 100 450 450 250 250 100 100 100" />
+        <numeric name="kd" data="80 80 80 70 60 60 80 80 80 70 60 60 45 45 55 25 25 15 15 6 6 6 25 25 15 15 6 6 6" />
+    </custom>
+    <keyframe>
+        <key name="preparacao" qpos="-0.05 0 0.9 1 0 0 0 1.06592938965e-18 0.0918220982 -0.3286827892 0.604981490488 -0.276298701287 -0.0918220982 6.39928357764e-18 -0.0918220982 -0.3286827892 0.604981490488 -0.276298701287 0.0918220982 0 0 0.349065850399 0.360001555338 -0.620861366438 0.0459151497378 1.14647702996 -0.358407694393 0.832558391134 0.310278440231 0.726051744609 -0.506042720274 -0.359281764433 0.428164837228 0.381114900346 0.425447649001 -0.351104087394 0.7155 -0.095 0.02135 1 0 0 0" />
+    </keyframe>
 </mujoco>

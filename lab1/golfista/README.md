@@ -10,7 +10,7 @@ Requer Python, MuJoCo 3.13.0 e NumPy (já usados nos exercícios anteriores).
 A partir de qualquer pasta:
 
 ```bash
-python3 ~/robotics_labs/lab1/golfista/golfista_v2/executar.py
+python3 ~/robotics_labs/lab1/golfista/executar.py
 ```
 
 Não abrir apenas o XML com `mujoco.viewer`: isso não carrega automaticamente
@@ -50,7 +50,7 @@ completo de equilíbrio para um swing ou para grandes perturbações.
 ## Teste reproduzível
 
 ```bash
-python3 ~/robotics_labs/lab1/golfista/golfista_v2/executar.py --testar --duracao 10
+python3 ~/robotics_labs/lab1/golfista/executar.py --testar --duracao 10
 ```
 
 Executa sem janela e grava `resultados.json`. Verifica erro da pega,
@@ -76,7 +76,7 @@ para executar a simulação. Para modificar a geometria e recalcular a postura:
 
 ```bash
 python3 -m pip install --user scipy
-python3 ~/robotics_labs/lab1/golfista/golfista_v2/preparar_modelo.py
+python3 ~/robotics_labs/lab1/golfista/preparar_modelo.py
 ```
 
 O gerador usa least_squares para alinhar os sites dos pés com o chão e os
