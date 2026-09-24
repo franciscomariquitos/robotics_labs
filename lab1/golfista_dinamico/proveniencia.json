@@ -1,0 +1,17 @@
+{
+  "fonte_original": "https://mocap.cs.cmu.edu/search.php?subjectnumber=64",
+  "copia_utilizada": "https://github.com/D-sorganization/UpstreamDrift/blob/main/data/cmu_mocap/subject_64/64_01.c3d",
+  "sha256_c3d": "bfa60767b82a07a4494a988a0d35621187963c269e4a019d29fd1133cc065648",
+  "amostras": 448,
+  "fps": 120.0,
+  "duracao_entre_primeira_e_ultima_amostra_s": 3.725,
+  "marcadores_utilizados": 44,
+  "marcadores_excluidos": [
+    "RHEE-1"
+  ],
+  "transformacao": "mm para m; translacao horizontal constante; x=Y, y=-X, z=Z",
+  "suavizacao": "nenhuma",
+  "preenchimento_lacunas": "nenhum",
+  "natureza": "Marcadores de superficie medidos; nao sao centros articulares nem forcas.",
+  "atribuicao": "Data obtained from mocap.cs.cmu.edu. Database created with funding from NSF EIA-0196217."
+}
