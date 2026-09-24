@@ -1,8 +1,17 @@
 <?xml version='1.0' encoding='utf-8'?>
-<mujoco model="golfista_v2">
+<mujoco model="golfista">
     <!-- SI: metros, kg, segundos. Angulos XML em graus; qpos e controlos em radianos. -->
     <compiler angle="degree" autolimits="true" />
+
+    <!--integrator="implicitfast" é o algoritmo numérico usado pelo MuJoCo
+     para avançar a dinâmica.-->
+    <!--Quando existem contactos e restrições, o MuJoCo tem de resolver 
+    numericamente essas restrições. Permitimos até 100 iterações-->
+    <!--A tolerance é usada pelo solver para decidir quando uma solução está 
+    suficientemente convergida-->
+    <!-- O cone="elliptic" Controla o modelo de cone de atrito.-->
     <option timestep=".001" gravity="0 0 -9.81" integrator="implicitfast" iterations="100" tolerance="1e-10" cone="elliptic" />
+    
     <statistic center="0.15 0 0.9" extent="2.4" />
     <visual>
         <global offwidth="1280" offheight="960" />

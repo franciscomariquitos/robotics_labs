@@ -1,101 +1,135 @@
-# Golfista v2 — postura de preparação
+# Golfista — modelo base em MuJoCo
 
-Esta versão substitui a base fixa por uma bacia livre e pernas articuladas.
-O objetivo desta etapa é sustentar uma postura de preparação com duas mãos
-na pega. **Ainda não executa um swing e não é um modelo biomecânico validado.**
+Este diretório contém o modelo atual do conjunto jogador + taco + bola.
+O ficheiro `golfista.xml` é a **única fonte de verdade do modelo MuJoCo**:
+geometria, massas, articulações, limites, contactos, actuators, ganhos `Kp`/`Kd`
+e a postura inicial estão todos definidos nele.
+
+**Não existe qualquer script que regenere ou reescreva o XML.**
+As alterações ao modelo devem ser feitas diretamente em `golfista.xml`.
+
+Nesta etapa o modelo mantém apenas a postura de preparação; ainda não executa
+o swing completo.
+
+## Ficheiros
+
+- `golfista.xml` — modelo físico completo e keyframe inicial `preparacao`.
+- `executar.py` — carrega o XML, aplica o controlador e executa os testes.
+- `resultados.json` — resultados do último teste automático executado.
+- `preview.png` — imagem de referência da postura atual.
+- `README.md` — documentação desta versão.
 
 ## Executar
 
-Requer Python, MuJoCo 3.13.0 e NumPy (já usados nos exercícios anteriores).
-A partir de qualquer pasta:
+Requer Python, MuJoCo e NumPy.
+
+A partir de qualquer diretório:
 
 ```bash
 python3 ~/robotics_labs/lab1/golfista/executar.py
 ```
 
-Não abrir apenas o XML com `mujoco.viewer`: isso não carrega automaticamente
-o keyframe de preparação nem executa o controlador. Como a bacia é livre,
-o corpo cai sem atuação adequada.
+O `executar.py` **apenas lê** `golfista.xml`; não o modifica nem o reescreve.
 
-O script carrega o keyframe `preparacao`, calculado por cinemática inversa,
-e aplica binários limitados a cada passo. Não reescreve as posições durante
-a simulação. A postura mantém-se parada; o movimento do swing será outra etapa.
-Os comandos do painel Control são substituídos pelo controlador Python.
+Não abrir apenas o XML com `mujoco.viewer` para avaliar esta postura: o viewer
+não carrega automaticamente o keyframe `preparacao` nem executa o controlador
+Python. Como a bacia é livre, o jogador necessita da atuação definida no
+`executar.py` para manter a postura.
 
-## Estrutura
+## Estrutura do modelo
 
-- Bacia livre: 3 translações + 3 rotações; sem atuador na base.
+- Bacia livre: 3 translações + 3 rotações; sem actuator na base.
 - Cada perna: anca com 3 eixos, joelho com 1 e tornozelo com 2.
 - Tronco: rotação axial, flexão/extensão e inclinação lateral.
-- Cada braço: ombro com 3 eixos, cotovelo com 1, pronação/supinação com 1,
-  pulso com 2. Cabeça e pescoço rígidos relativamente ao tronco.
-- Total: 29 coordenadas articulares atuadas + 6 velocidades da base livre,
-  antes da redução causada pelas restrições. A bola tem mais 6 velocidades.
-- Mão esquerda rigidamente ligada ao taco; mão direita ligada ao segundo
-  ponto de pega, separado por 9 cm, através de uma restrição `weld` entre sites.
-- Apoio por contactos das solas com o chão. Sem weld nos pés, sem apoio da bacia,
-  sem compensação artificial da gravidade nos corpos e sem forças externas.
+- Cada braço: ombro com 3 eixos, cotovelo com 1, pronação/supinação com 1 e
+  pulso com 2.
+- Cabeça e pescoço são rígidos relativamente ao tronco.
+- Total: 29 coordenadas articulares atuadas, mais a base livre e a bola livre.
+- A mão esquerda está rigidamente ligada ao taco.
+- A mão direita fecha a cadeia através de uma restrição `weld` entre sites.
+- O apoio é produzido pelos contactos das solas com o chão.
 
-## Controlo
+## Postura inicial
 
-PD articular com referência constante e compensação estática de binário.
-A compensação é calculada na postura inicial, repartindo o peso por dois
-pontos de apoio dentro das solas. Serve para calcular binários nos motores;
-não aplica essas forças diretamente no simulador. As forças reais de apoio
-são produzidas pelo solver de contacto.
+A postura inicial já está guardada diretamente no XML:
 
-A compensação estática e os ganhos desta etapa não constituem um controlador
-completo de equilíbrio para um swing ou para grandes perturbações.
+```xml
+<keyframe>
+    <key name="preparacao" qpos="..." />
+</keyframe>
+```
 
-## Teste reproduzível
+O vetor `qpos` foi previamente calculado para colocar os pés no chão e as duas
+mãos na pega. A partir de agora este valor faz parte do próprio modelo e só deve
+ser alterado deliberadamente no `golfista.xml`.
+
+## Controlo atual
+
+O `executar.py` usa controlo PD articular com referência constante e uma
+compensação estática de binário calculada quando o modelo é carregado:
+
+```text
+tau = Kp (q_ref - q) - Kd q_dot + tau_ff
+```
+
+Os ganhos `Kp` e `Kd` estão armazenados no próprio `golfista.xml`, na secção
+`<custom>`. Os limites dos motores também estão no XML, na secção `<actuator>`.
+
+A compensação estática distribui o peso pelos dois pontos de apoio dos pés para
+estimar os binários necessários na postura inicial. Não aplica forças externas
+de sustentação: as forças reais de apoio são calculadas pelo solver de contacto
+do MuJoCo.
+
+Este controlador é adequado apenas para validar a postura atual. Não é ainda o
+controlador final do swing.
+
+## Teste automático
 
 ```bash
 python3 ~/robotics_labs/lab1/golfista/executar.py --testar --duracao 10
 ```
 
-Executa sem janela e grava `resultados.json`. Verifica erro da pega,
-orientação relativa, limites articulares, altura da bacia, apoio bilateral,
-saturação dos motores, ausência de contacto taco–bola e avisos numéricos.
+O teste corre sem janela e grava `resultados.json`. Verifica:
 
-Critérios de engenharia deste teste, não requisitos do enunciado:
-- erro de pega < 3 mm e erro de orientação < 2 graus;
+- erro de posição e orientação da pega;
+- limites articulares;
+- altura da bacia;
+- apoio bilateral;
+- saturação dos actuators;
+- ausência de contacto taco-bola nesta fase;
+- avisos numéricos do MuJoCo;
+- erro de seguimento da postura.
+
+Critérios atuais de engenharia:
+
+- erro de pega < 3 mm;
+- erro de orientação da pega < 2 graus;
 - altura da bacia > 0,75 m;
-- apoio bilateral em todos os passos após 0,5 s;
-- nenhuma saturação nem aviso numérico;
-- violação de limites < 0,001 rad;
-- erro de seguimento < 5 graus e velocidade final da bacia < 0,01 m/s;
-- nenhum contacto taco–bola durante a preparação.
+- apoio bilateral após os primeiros 0,5 s;
+- nenhuma saturação de actuator;
+- violação dos limites < 0,001 rad;
+- erro articular < 5 graus;
+- velocidade final da bacia < 0,01 m/s;
+- nenhum contacto taco-bola durante a preparação.
 
-Os resultados incluídos foram produzidos com MuJoCo 3.13.0, Python 3.12
-num ambiente Linux. Reexecutar no WSL para confirmar o comportamento local.
+Estes critérios servem para validar esta etapa do desenvolvimento; não provam
+que o modelo seja biomecanicamente validado nem que o swing seja realista.
 
-## Reconstruir a postura (opcional)
+## Limitações atuais
 
-`golfista.xml` já contém a postura calculada. Não é preciso instalar SciPy
-para executar a simulação. Para modificar a geometria e recalcular a postura:
-
-```bash
-python3 -m pip install --user scipy
-python3 ~/robotics_labs/lab1/golfista/preparar_modelo.py
-```
-
-O gerador usa least_squares para alinhar os sites dos pés com o chão e os
-sites das mãos com uma pega prescrita, respeitando os limites articulares.
-O taco é orientado através da mão esquerda. A pega direita é fechada depois
-de encontrar a postura compatível. Alterações diretas no XML são substituídas
-se o gerador voltar a ser executado.
-
-## Limitações a manter explícitas
-
-- Segmentos rígidos e geometrias simples; massas, limites e ganhos iniciais
-  estimados, sem calibração antropométrica ou biomecânica.
+- Segmentos humanos representados por corpos rígidos e geometrias simples.
+- Massas, limites articulares, limites de binário e ganhos ainda são parâmetros
+  de modelação e não uma calibração biomecânica completa.
 - Pega idealizada rígida, sem dedos nem deslizamento.
-- Auto-colisões do corpo desativadas nesta etapa: movimentos futuros devem
-  ser revistos para impedir atravessamentos. Isto não foi validado para swing.
-- Colisões ativas: pés–chão, taco–chão, taco–bola e bola–chão.
-- Contactos complacentes e pequenas penetrações numéricas são esperados.
-- Atrito da bola estimado; sem aerodinâmica nem deformação física detalhada.
-- Critérios testados apenas na postura nominal durante 10 s. Estabilidade
-  face a perturbações, levantamento do calcanhar, swing e impacto estão pendentes.
+- Auto-colisões do corpo estão desativadas nesta fase.
+- Colisões principais ativas: pés-chão, taco-chão, taco-bola e bola-chão.
+- Sem aerodinâmica da bola.
+- O teste atual valida apenas a postura nominal; swing, impacto e perturbações
+  por grau de liberdade ainda serão desenvolvidos.
 
-`preview.png` mostra a simulação após 2 segundos com o controlador ativo.
+## Regra de desenvolvimento
+
+`golfista.xml` não deve ser gerado automaticamente por outro ficheiro.
+Qualquer alteração ao modelo é feita diretamente no XML e fica registada pelo
+Git. O Python pode ler o XML, controlar a simulação e produzir resultados, mas
+não deve substituir silenciosamente o modelo.
